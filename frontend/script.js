@@ -18,7 +18,7 @@
 /* ───────────────────────────────────────────────────────────────
    1. CONFIG & STATE
 ─────────────────────────────────────────────────────────────── */
-const API = 'http://localhost:8080/api';
+const API = 'https://cycletracker-production.up.railway.app/api';
 
 const state = {
   token:      null,
