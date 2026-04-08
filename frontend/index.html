@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cycle | Menstrual Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Three.js background canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Global loading overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner-ring"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       AUTH PAGE
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="auth-page" class="page">
+    <div class="auth-wrap">
+      <div class="auth-card glass">
+
+        <!-- Brand -->
+        <div class="auth-brand">
+          <div class="brand-icon">🌸</div>
+          <h1 class="brand-name">Cycle</h1>
+          <p class="brand-tagline">Your personal cycle companion</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Sign In</button>
+          <button class="auth-tab" data-tab="register">Create Account</button>
+          <div class="tab-indicator"></div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="login-form" class="auth-form active" novalidate autocomplete="on">
+          <div class="field-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email"
+                   placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="field-group">
+            <label for="login-pass">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="login-pass" name="password"
+                     placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" required>
+              <button type="button" class="toggle-pass" data-target="login-pass" aria-label="Toggle password">
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="login-btn">
+            <span class="btn-text">Sign In</span>
+            <div class="btn-spinner hidden"></div>
+          </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="register-form" class="auth-form" novalidate autocomplete="on">
+          <div class="field-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" name="name"
+                   placeholder="Your name" autocomplete="name" required>
+          </div>
+          <div class="field-group">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" name="email"
+                   placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="field-group">
+            <label for="reg-pass">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="reg-pass" name="password"
+                     placeholder="Min 6 characters" autocomplete="new-password" required minlength="6">
+              <button type="button" class="toggle-pass" data-target="reg-pass" aria-label="Toggle password">
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="register-btn">
+            <span class="btn-text">Create Account</span>
+            <div class="btn-spinner hidden"></div>
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       APP PAGE
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="app-page" class="page">
+
+    <!-- Top navigation bar -->
+    <header class="top-bar glass">
+      <div class="top-bar-left">
+        <span class="app-logo">🌸</span>
+        <span class="app-name">Cycle</span>
+      </div>
+      <nav class="top-bar-nav">
+        <button class="nav-pill active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+          Today
+        </button>
+        <button class="nav-pill" data-view="calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Calendar
+        </button>
+        <button class="nav-pill" data-view="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <polyline points="12,8 12,12 14,14"/>
+            <path d="M3.05 11a9 9 0 1 0 .5-4"/>
+            <polyline points="3,3 3,7 7,7"/>
+          </svg>
+          History
+        </button>
+      </nav>
+      <div class="top-bar-right">
+        <div class="avatar" id="user-avatar">A</div>
+        <!-- Dark / Light mode toggle -->
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <!-- Moon shown in light mode -->
+          <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <!-- Sun shown in dark mode (hidden by default) -->
+          <svg id="icon-sun" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="logout-btn" title="Sign out" aria-label="Sign out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16,17 21,12 16,7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── DASHBOARD VIEW ── -->
+    <main id="dashboard-view" class="view active">
+      <div class="container">
+
+        <!-- Greeting -->
+        <section class="greeting-section">
+          <div class="greeting-top-row">
+            <p class="greeting-time" id="greeting-time">Good morning ☀️,</p>
+            <span class="live-date-chip" id="live-date-chip"></span>
+          </div>
+          <h2 class="greeting-name" id="greeting-name">Welcome back 👋</h2>
+          <p class="cycle-day-label" id="cycle-day-label"></p>
+        </section>
+
+        <!-- Phase Hero Card -->
+        <section class="phase-hero glass" id="phase-hero">
+          <div class="ring-wrap">
+            <svg class="phase-ring" viewBox="0 0 160 160" width="160" height="160" aria-hidden="true">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF6B91"/>
+                  <stop offset="100%" stop-color="#C77DFF"/>
+                </linearGradient>
+                <filter id="ring-glow">
+                  <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- Track ring -->
+              <circle cx="80" cy="80" r="62" fill="none" stroke="#FFE5EE" stroke-width="9"/>
+              <!-- Progress ring -->
+              <circle id="ring-bar" cx="80" cy="80" r="62" fill="none"
+                      stroke="url(#ringGrad)" stroke-width="9"
+                      stroke-linecap="round"
+                      stroke-dasharray="389.56"
+                      stroke-dashoffset="389.56"
+                      transform="rotate(-90 80 80)"
+                      filter="url(#ring-glow)"/>
+              <!-- Center text -->
+              <text id="ring-day" x="80" y="74" text-anchor="middle"
+                    font-family="Inter,sans-serif" font-size="30" font-weight="700" fill="#1C1C1E">–</text>
+              <text id="ring-sub" x="80" y="93" text-anchor="middle"
+                    font-family="Inter,sans-serif" font-size="11" fill="#8E8E93">loading</text>
+            </svg>
+          </div>
+
+          <div class="phase-body">
+            <div class="phase-badge" id="phase-badge">
+              <span id="phase-dot" class="phase-dot">●</span>
+              <span id="phase-name" class="phase-label">Loading…</span>
+            </div>
+            <p id="phase-suggestion" class="phase-suggestion">Fetching your cycle data…</p>
+            <div class="phase-pills">
+              <div class="phase-pill">
+                <span class="pill-label">Mood</span>
+                <span class="pill-value" id="meta-mood">—</span>
+              </div>
+              <div class="phase-pill">
+                <span class="pill-label">Energy</span>
+                <span class="pill-value" id="meta-energy">—</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Key Dates -->
+        <section class="dates-row">
+          <div class="date-card glass">
+            <div class="date-icon">🩸</div>
+            <div class="date-body">
+              <span class="date-label">Next Period</span>
+              <span class="date-value" id="next-period-val">—</span>
+              <span class="date-cd" id="next-period-cd"></span>
+            </div>
+          </div>
+          <div class="date-card glass">
+            <div class="date-icon">🥚</div>
+            <div class="date-body">
+              <span class="date-label">Ovulation</span>
+              <span class="date-value" id="ovulation-val">—</span>
+              <span class="date-cd" id="ovulation-cd"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Fertile Window Banner -->
+        <section class="fertile-banner glass">
+          <div class="fertile-left">
+            <span class="fertile-icon">🌸</span>
+            <span class="fertile-title">Fertile Window</span>
+          </div>
+          <div class="fertile-range">
+            <span id="fertile-start">—</span>
+            <div class="fertile-dash">
+              <svg viewBox="0 0 40 6" fill="none" width="40" height="6">
+                <path d="M0 3 Q10 0 20 3 Q30 6 40 3" stroke="#FF9EB5" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <span id="fertile-end">—</span>
+          </div>
+        </section>
+
+        <!-- Daily Insight -->
+        <section class="insight-card glass">
+          <div class="insight-header">
+            <span class="insight-icon">💙</span>
+            <span class="insight-title">Daily Insight</span>
+          </div>
+          <p class="insight-text" id="insight-text">Your daily insight will appear once cycle data is saved.</p>
+          <div class="care-row">
+            <span class="care-icon">💡</span>
+            <span class="care-text" id="care-text">—</span>
+          </div>
+        </section>
+
+        <!-- Cycle Input Form -->
+        <section class="input-card glass">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Update Cycle Data
+          </h3>
+          <form id="cycle-form" novalidate>
+            <div class="field-group">
+              <label for="last-period">Last Period Start Date</label>
+              <input type="date" id="last-period" required>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="cycle-len">Cycle Length</label>
+                <div class="number-wrap">
+                  <button type="button" class="num-btn" data-action="dec" data-target="cycle-len">−</button>
+                  <input type="number" id="cycle-len" value="28" min="21" max="45">
+                  <button type="button" class="num-btn" data-action="inc" data-target="cycle-len">+</button>
+                </div>
+                <span class="field-hint">days (21–45)</span>
+              </div>
+              <div class="field-group">
+                <label for="period-len">Period Length</label>
+                <div class="number-wrap">
+                  <button type="button" class="num-btn" data-action="dec" data-target="period-len">−</button>
+                  <input type="number" id="period-len" value="5" min="2" max="10">
+                  <button type="button" class="num-btn" data-action="inc" data-target="period-len">+</button>
+                </div>
+                <span class="field-hint">days (2–10)</span>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="save-btn">
+              <span class="btn-text">Save &amp; Predict</span>
+              <div class="btn-spinner hidden"></div>
+            </button>
+          </form>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- ── CALENDAR VIEW ── -->
+    <main id="calendar-view" class="view">
+      <div class="container">
+
+        <div class="cal-header-row">
+          <button class="cal-nav" id="prev-month" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <h2 class="cal-title" id="cal-title">April 2026</h2>
+          <button class="cal-nav" id="next-month" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+              <polyline points="9,18 15,12 9,6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="cal-card glass">
+          <div class="cal-week-row">
+            <span>Sun</span><span>Mon</span><span>Tue</span>
+            <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <div class="cal-legend">
+          <div class="legend-item"><span class="leg-dot leg-period"></span>Period</div>
+          <div class="legend-item"><span class="leg-dot leg-fertile"></span>Fertile</div>
+          <div class="legend-item"><span class="leg-dot leg-ovulation"></span>Ovulation</div>
+          <div class="legend-item"><span class="leg-dot leg-today"></span>Today</div>
+        </div>
+
+        <!-- Day detail panel -->
+        <div id="day-detail" class="day-detail glass hidden" role="dialog" aria-modal="true">
+          <button class="detail-close" id="detail-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <div class="detail-date" id="detail-date"></div>
+          <div class="detail-info" id="detail-info"></div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ── HISTORY VIEW ── -->
+    <main id="history-view" class="view">
+      <div class="container">
+
+        <!-- Page title -->
+        <section class="hist-title-row">
+          <h2 class="hist-page-title">Cycle History</h2>
+          <span class="hist-subtitle" id="hist-subtitle">Your tracked periods</span>
+        </section>
+
+        <!-- Summary stats card -->
+        <section class="hist-stats glass" id="hist-stats">
+          <div class="hist-stat">
+            <span class="hist-stat-num" id="stat-total">0</span>
+            <span class="hist-stat-lbl">Cycles Logged</span>
+          </div>
+          <div class="hist-stat-divider"></div>
+          <div class="hist-stat">
+            <span class="hist-stat-num" id="stat-avg-cycle">—</span>
+            <span class="hist-stat-lbl">Avg Cycle Length</span>
+          </div>
+          <div class="hist-stat-divider"></div>
+          <div class="hist-stat">
+            <span class="hist-stat-num" id="stat-avg-period">—</span>
+            <span class="hist-stat-lbl">Avg Period Length</span>
+          </div>
+        </section>
+
+        <!-- Log past period form -->
+        <section class="hist-add-section glass">
+          <button class="hist-add-toggle" id="hist-add-toggle" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Log a Period
+            <svg class="toggle-arrow" id="hist-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+          </button>
+
+          <div id="hist-add-panel" class="hist-add-panel collapsed">
+            <form id="hist-add-form" novalidate>
+              <div class="field-group">
+                <label for="hist-date">Period Start Date</label>
+                <input type="date" id="hist-date" required>
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label for="hist-cycle-len">Cycle Length</label>
+                  <div class="number-wrap">
+                    <button type="button" class="num-btn" data-action="dec" data-target="hist-cycle-len">−</button>
+                    <input type="number" id="hist-cycle-len" value="28" min="21" max="45">
+                    <button type="button" class="num-btn" data-action="inc" data-target="hist-cycle-len">+</button>
+                  </div>
+                  <span class="field-hint">days</span>
+                </div>
+                <div class="field-group">
+                  <label for="hist-period-len">Period Length</label>
+                  <div class="number-wrap">
+                    <button type="button" class="num-btn" data-action="dec" data-target="hist-period-len">−</button>
+                    <input type="number" id="hist-period-len" value="5" min="2" max="10">
+                    <button type="button" class="num-btn" data-action="inc" data-target="hist-period-len">+</button>
+                  </div>
+                  <span class="field-hint">days</span>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" id="hist-save-btn">
+                <span class="btn-text">Save Entry</span>
+                <div class="btn-spinner hidden"></div>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- History timeline -->
+        <section class="hist-timeline-section">
+          <div class="hist-timeline" id="hist-timeline">
+            <!-- Populated by JS -->
+            <div class="hist-empty" id="hist-empty">
+              <div class="hist-empty-icon">🌸</div>
+              <p>No cycles logged yet</p>
+              <p class="hist-empty-sub">Use the form above to start tracking your history</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div><!-- /app-page -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
