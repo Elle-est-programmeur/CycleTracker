@@ -191,10 +191,23 @@ async function apiFetch(method, path, body = null, auth = true) {
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${API}${path}`, opts);
+  const url = `${API}${path}`;
+  console.log(`[API] ${method} ${url}`);
+
+  let res;
+  try {
+    res = await fetch(url, opts);
+  } catch (networkErr) {
+    console.error(`[API] Network error on ${method} ${url}:`, networkErr);
+    throw new Error('Cannot reach server. Check your connection or try again later.');
+  }
+
+  console.log(`[API] ${method} ${url} → ${res.status}`);
+
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `Error ${res.status}`);
+    console.error(`[API] Error response:`, data);
+    throw new Error(data.error || `Server error ${res.status}`);
   }
   if (res.status === 204 || res.headers.get('content-length') === '0') return null;
   return res.json();
@@ -918,7 +931,8 @@ function bindAuthForms() {
       toast(`Welcome back, ${res.name}! 🌸`, 'success');
       await enterApp();
     } catch (err) {
-      toast(err.message || 'Login failed', 'error');
+      console.error('[Login] Failed:', err);
+      toast(err.message || 'Login failed. Please try again.', 'error');
       document.getElementById('login-form').classList.add('shake');
       setTimeout(() => document.getElementById('login-form').classList.remove('shake'), 400);
     } finally {
@@ -944,7 +958,8 @@ function bindAuthForms() {
       toast(`Welcome, ${res.name}! 🌸`, 'success');
       await enterApp();
     } catch (err) {
-      toast(err.message || 'Registration failed', 'error');
+      console.error('[Register] Failed:', err);
+      toast(err.message || 'Registration failed. Please try again.', 'error');
     } finally {
       setBtnLoading(btn, false);
     }
